@@ -61,6 +61,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "name": "@echecs/uci",
+  "packageManager": "pnpm@10.33.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/echecsjs/uci.git"
