@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-04-26
+
+### Changed
+
+- Upgraded `emittery` from 1.1.0 to 2.0.0 — adapted internally with no breaking
+  changes to the public API
+- Minimum Node.js version raised from 20 to 22 (required by emittery v2)
+
 ## [4.0.2] - 2026-04-16
 
 ### Fixed
