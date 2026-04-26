@@ -4,7 +4,7 @@
     "url": "https://github.com/echecsjs/uci/issues"
   },
   "dependencies": {
-    "emittery": "^1.1.0",
+    "emittery": "^2.0.0",
     "zod": "^3.24.2"
   },
   "description": "Universal Chess Interface (UCI) wrapper for Node.js. Spawns and communicates with UCI chess engines (Stockfish, Komodo, etc.) via a typed event-emitter API.",
@@ -30,7 +30,7 @@
     "vitest": "^4.1.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "exports": {
     ".": {

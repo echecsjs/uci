@@ -59,6 +59,14 @@ class UCI {
   #lines = 1;
 
   /**
+   * Maps consumer listeners to their emittery v2 wrappers so off() can
+   * unsubscribe the correct reference.
+   * @private
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  readonly #listeners = new WeakMap<Function, Function>();
+
+  /**
    * Internal list of moves
    * @private
    */
@@ -105,15 +113,15 @@ class UCI {
     this.#config = config;
     this.process = new Process(path);
 
-    this.process.on('line', this.ingest.bind(this));
-    this.process.on('error', (value) => this.#emitter.emit('error', value));
+    this.process.on('line', ({ data }) => this.ingest(data));
+    this.process.on('error', ({ data }) => this.#emitter.emit('error', data));
 
     // Store the ID of the engine
-    this.#emitter.on('id', (id) => {
+    this.#emitter.on('id', ({ data: id }) => {
       this.#id = id;
     });
     // Define the available options
-    this.#emitter.on('option', (option) => {
+    this.#emitter.on('option', ({ data: option }) => {
       this.options.define(option.name, option);
     });
 
@@ -195,18 +203,28 @@ class UCI {
     event: K,
     listener: (data: Events[K]) => void | Promise<void>,
   ): void {
-    this.#emitter.off(event, listener);
+    const wrapped = this.#listeners.get(listener);
+    if (wrapped) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.#emitter.off(event, wrapped as any);
+      this.#listeners.delete(listener);
+    }
   }
 
   on<K extends keyof Events>(
     event: K,
     listener: (data: Events[K]) => void | Promise<void>,
   ): () => void {
-    return this.#emitter.on(event, listener);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wrapped = ({ data }: any) => listener(data);
+    this.#listeners.set(listener, wrapped);
+    return this.#emitter.on(event, wrapped);
   }
 
-  once<K extends keyof Events>(event: K): Promise<Events[K]> {
-    return this.#emitter.once(event);
+  async once<K extends keyof Events>(event: K): Promise<Events[K]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = (await this.#emitter.once(event)) as any;
+    return data as Events[K];
   }
 
   async ponder(move: string, options: GoOptions = {}): Promise<void> {
@@ -410,9 +428,9 @@ class UCI {
     });
 
     const exit = new Promise<never>((_, ko) => {
-      unsubscribeExit = this.process.on('exit', () => {
-        ko(new Error('Engine process exited'));
-      });
+      unsubscribeExit = this.process.on('exit', () =>
+        ko(new Error('Engine process exited')),
+      );
     });
 
     const timeout = new Promise<never>((_, ko) => {

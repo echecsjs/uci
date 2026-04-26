@@ -7,7 +7,7 @@ describe('Process', () => {
     const proc = new Process('sh');
 
     const errorPromise = new Promise<Error>((resolve) => {
-      proc.on('error', (error_) => {
+      proc.on('error', ({ data: error_ }) => {
         resolve(error_);
       });
     });
@@ -31,7 +31,7 @@ describe('Process', () => {
 
       // Single handler: collects lines and resolves the sentinel promise
       const donePromise = new Promise<void>((resolve) => {
-        proc.on('line', (line) => {
+        proc.on('line', ({ data: line }) => {
           lines.push(line);
           if (line === '__done__') {
             resolve();
@@ -73,7 +73,7 @@ describe('Process', () => {
       const lines: string[] = [];
 
       const donePromise = new Promise<void>((resolve) => {
-        proc.on('line', (line) => {
+        proc.on('line', ({ data: line }) => {
           lines.push(line);
           if (line === '__done__') {
             resolve();
@@ -102,7 +102,7 @@ describe('Process', () => {
 
       // Resolve once we see the sentinel so we don't rely on a fixed timeout
       const donePromise = new Promise<void>((resolve) => {
-        proc.on('line', (line) => {
+        proc.on('line', ({ data: line }) => {
           lines.push(line);
           if (line === '__done__') {
             resolve();
@@ -149,7 +149,7 @@ describe('Process', () => {
       const proc = new Process('sh');
 
       const exitPromise = new Promise<number>((resolve) => {
-        proc.on('exit', (code) => {
+        proc.on('exit', ({ data: code }) => {
           resolve(code);
         });
       });
@@ -170,7 +170,7 @@ describe('Process', () => {
       const proc = new Process('sh');
 
       const exitPromise = new Promise<number>((resolve) => {
-        proc.on('exit', (code) => {
+        proc.on('exit', ({ data: code }) => {
           resolve(code);
         });
       });
