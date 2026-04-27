@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "emittery": "^2.0.0",
-    "zod": "^3.24.2"
+    "zod": "^4.3.6"
   },
   "description": "Universal Chess Interface (UCI) wrapper for Node.js. Spawns and communicates with UCI chess engines (Stockfish, Komodo, etc.) via a typed event-emitter API.",
   "devDependencies": {
