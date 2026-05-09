@@ -44,7 +44,7 @@
     "README.md",
     "CHANGELOG.md"
   ],
-  "homepage": "https://github.com/echecsjs/uci#readme",
+  "homepage": "https://uci.echecs.dev",
   "keywords": [
     "chess",
     "chess engine",
