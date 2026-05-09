@@ -59,7 +59,6 @@
     "wrapper"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
   "name": "@echecs/uci",
   "packageManager": "pnpm@10.33.0",
   "repository": {
