@@ -61,6 +61,9 @@
   "license": "MIT",
   "name": "@echecs/uci",
   "packageManager": "pnpm@10.33.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/echecsjs/uci.git"
