@@ -28,7 +28,11 @@ describe('UCI', () => {
     );
 
     // stop() should not throw — ignore the underlying write error
-    await uci.stop().catch(vi.fn());
+    try {
+      await uci.stop();
+    } catch {
+      // ignore
+    }
 
     expect(spy).toHaveBeenCalledWith('stop');
   });
@@ -44,7 +48,11 @@ describe('UCI', () => {
       'kill',
     );
 
-    await uci[Symbol.dispose]().catch(vi.fn());
+    try {
+      await uci[Symbol.dispose]();
+    } catch {
+      // ignore
+    }
 
     expect(executeSpy).toHaveBeenCalledWith('quit');
     expect(killSpy).toHaveBeenCalledOnce();
@@ -107,7 +115,11 @@ describe('UCI', () => {
       'execute',
     );
 
-    await uci.debug(true).catch(vi.fn());
+    try {
+      await uci.debug(true);
+    } catch {
+      // ignore
+    }
 
     expect(spy).toHaveBeenCalledWith('debug on');
   });
@@ -119,7 +131,11 @@ describe('UCI', () => {
       'execute',
     );
 
-    await uci.debug(false).catch(vi.fn());
+    try {
+      await uci.debug(false);
+    } catch {
+      // ignore
+    }
 
     expect(spy).toHaveBeenCalledWith('debug off');
   });

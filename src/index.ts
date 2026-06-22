@@ -13,6 +13,14 @@ interface RegisterOptions {
 
 const TIMEOUT = 5000;
 
+async function suppressRejection(promise: Promise<unknown>): Promise<void> {
+  try {
+    await promise;
+  } catch {
+    // intentionally suppress — callers use on('error') or await start()
+  }
+}
+
 class UCI {
   /**
    * Internal store of the engine options
@@ -134,13 +142,146 @@ class UCI {
       // Set a timeout as a fallback
       setTimeout(ko, this.#timeout);
 
-      // Starts the communication protocol
-      this.execute('uci').catch(ko);
+      // Starts the communication protocol — errors reject #ready via ko
+      void (async () => {
+        try {
+          await this.execute('uci');
+        } catch (error: unknown) {
+          ko(error);
+        }
+      })();
     });
 
     // Prevent unhandled rejection when no caller awaits #ready.
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    void this.#ready.catch((_error: unknown) => {});
+    void suppressRejection(this.#ready);
+  }
+
+  private async go(
+    options: GoOptions = {},
+    isPondering = false,
+  ): Promise<void> {
+    await this.ready();
+
+    const parts: string[] = ['go'];
+
+    if (isPondering) {
+      parts.push('ponder');
+    }
+
+    if (options.wtime !== undefined) {
+      parts.push('wtime', String(options.wtime));
+    }
+
+    if (options.btime !== undefined) {
+      parts.push('btime', String(options.btime));
+    }
+
+    if (options.winc !== undefined) {
+      parts.push('winc', String(options.winc));
+    }
+
+    if (options.binc !== undefined) {
+      parts.push('binc', String(options.binc));
+    }
+
+    if (options.movestogo !== undefined) {
+      parts.push('movestogo', String(options.movestogo));
+    }
+
+    const depth =
+      options.depth ?? (this.#depth === 'infinite' ? undefined : this.#depth);
+    if (depth !== undefined) {
+      parts.push('depth', String(depth));
+    }
+
+    if (options.nodes !== undefined) {
+      parts.push('nodes', String(options.nodes));
+    }
+
+    if (options.mate !== undefined) {
+      parts.push('mate', String(options.mate));
+    }
+
+    if (options.movetime !== undefined) {
+      parts.push('movetime', String(options.movetime));
+    }
+
+    const hasSearchLimit =
+      depth !== undefined ||
+      options.movestogo !== undefined ||
+      options.movetime !== undefined ||
+      options.nodes !== undefined ||
+      options.mate !== undefined ||
+      options.wtime !== undefined ||
+      options.btime !== undefined;
+
+    if (!hasSearchLimit && !isPondering) {
+      parts.push('infinite');
+    }
+
+    if (options.searchmoves && options.searchmoves.length > 0) {
+      parts.push('searchmoves', ...options.searchmoves);
+    }
+
+    await this.execute(parts.join(' '));
+  }
+
+  private async ingest(input: string): Promise<void> {
+    const [key, ...argv] = input.split(' ');
+
+    if (key === undefined) {
+      return;
+    }
+
+    if (!Object.hasOwn(parsers, key)) {
+      await this.#emitter.emit('output', input);
+      return;
+    }
+
+    const value = argv.join(' ');
+    const command = key as keyof typeof parsers;
+    const payload = parsers[command](value);
+
+    await this.#emitter.emit(command as keyof Events, payload);
+  }
+
+  private async ready(): Promise<void> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let unsubscribeExit: (() => void) | undefined;
+    let unsubscribeReadyok: (() => void) | undefined;
+
+    const readyok = new Promise<void>((ok) => {
+      unsubscribeReadyok = this.#emitter.on('readyok', () => {
+        ok();
+      });
+    });
+
+    const exit = new Promise<never>((_, ko) => {
+      unsubscribeExit = this.process.on('exit', () =>
+        ko(new Error('Engine process exited')),
+      );
+    });
+
+    const timeout = new Promise<never>((_, ko) => {
+      timeoutId = setTimeout(() => {
+        ko(new Error('Engine ready timeout'));
+      }, this.#timeout);
+    });
+
+    await this.execute('isready');
+
+    try {
+      await Promise.race([readyok, exit, timeout]);
+    } catch (error: unknown) {
+      void this.#emitter.emit(
+        'error',
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    } finally {
+      clearTimeout(timeoutId);
+      unsubscribeExit?.();
+      unsubscribeReadyok?.();
+    }
   }
 
   get depth(): number | 'infinite' {
@@ -164,17 +305,19 @@ class UCI {
     this.process.kill();
   }
 
-  debug(on: boolean): Promise<void> {
-    return this.execute(`debug ${on ? 'on' : 'off'}`);
+  debug(isEnabled: boolean): Promise<void> {
+    return this.execute(`debug ${isEnabled ? 'on' : 'off'}`);
   }
 
   async execute(command: string): Promise<void> {
-    await this.process.write(`${command}\n`).catch((error: unknown) => {
+    try {
+      await this.process.write(`${command}\n`);
+    } catch (error: unknown) {
       void this.#emitter.emit(
         'error',
         error instanceof Error ? error : new Error(String(error)),
       );
-    });
+    }
   }
 
   async id(): Promise<ID> {
@@ -328,131 +471,6 @@ class UCI {
     this.#pondering = false;
     this.#ponderMove = undefined;
     return this.execute('stop');
-  }
-
-  private async go(options: GoOptions = {}, ponder = false): Promise<void> {
-    await this.ready();
-
-    const parts: string[] = ['go'];
-
-    if (ponder) {
-      parts.push('ponder');
-    }
-
-    if (options.wtime !== undefined) {
-      parts.push('wtime', String(options.wtime));
-    }
-
-    if (options.btime !== undefined) {
-      parts.push('btime', String(options.btime));
-    }
-
-    if (options.winc !== undefined) {
-      parts.push('winc', String(options.winc));
-    }
-
-    if (options.binc !== undefined) {
-      parts.push('binc', String(options.binc));
-    }
-
-    if (options.movestogo !== undefined) {
-      parts.push('movestogo', String(options.movestogo));
-    }
-
-    const depth =
-      options.depth ?? (this.#depth === 'infinite' ? undefined : this.#depth);
-    if (depth !== undefined) {
-      parts.push('depth', String(depth));
-    }
-
-    if (options.nodes !== undefined) {
-      parts.push('nodes', String(options.nodes));
-    }
-
-    if (options.mate !== undefined) {
-      parts.push('mate', String(options.mate));
-    }
-
-    if (options.movetime !== undefined) {
-      parts.push('movetime', String(options.movetime));
-    }
-
-    const hasSearchLimit =
-      depth !== undefined ||
-      options.movestogo !== undefined ||
-      options.movetime !== undefined ||
-      options.nodes !== undefined ||
-      options.mate !== undefined ||
-      options.wtime !== undefined ||
-      options.btime !== undefined;
-
-    if (!hasSearchLimit && !ponder) {
-      parts.push('infinite');
-    }
-
-    if (options.searchmoves && options.searchmoves.length > 0) {
-      parts.push('searchmoves', ...options.searchmoves);
-    }
-
-    await this.execute(parts.join(' '));
-  }
-
-  private async ingest(input: string): Promise<void> {
-    const [key, ...argv] = input.split(' ');
-    const value = argv.join(' ');
-
-    if (key === undefined) {
-      return;
-    }
-
-    if (!(key in parsers)) {
-      await this.#emitter.emit('output', input);
-      return;
-    }
-
-    const command = key as keyof typeof parsers;
-    const payload = parsers[command](value);
-
-    await this.#emitter.emit(command as keyof Events, payload);
-  }
-
-  private async ready(): Promise<void> {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let unsubscribeExit: (() => void) | undefined;
-    let unsubscribeReadyok: (() => void) | undefined;
-
-    const readyok = new Promise<void>((ok) => {
-      unsubscribeReadyok = this.#emitter.on('readyok', () => {
-        ok();
-      });
-    });
-
-    const exit = new Promise<never>((_, ko) => {
-      unsubscribeExit = this.process.on('exit', () =>
-        ko(new Error('Engine process exited')),
-      );
-    });
-
-    const timeout = new Promise<never>((_, ko) => {
-      timeoutId = setTimeout(() => {
-        ko(new Error('Engine ready timeout'));
-      }, this.#timeout);
-    });
-
-    await this.execute('isready');
-
-    try {
-      await Promise.race([readyok, exit, timeout]);
-    } catch (error: unknown) {
-      void this.#emitter.emit(
-        'error',
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    } finally {
-      clearTimeout(timeoutId);
-      unsubscribeExit?.();
-      unsubscribeReadyok?.();
-    }
   }
 }
 
