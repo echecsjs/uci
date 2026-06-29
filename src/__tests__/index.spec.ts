@@ -23,7 +23,7 @@ describe('UCI', () => {
   it('stop() sends the stop command', async () => {
     const uci = new UCI('/invalid/path');
     const spy = vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     );
 
@@ -40,7 +40,7 @@ describe('UCI', () => {
   it('[Symbol.dispose]() sends quit and kills the process', async () => {
     const uci = new UCI('/invalid/path');
     const executeSpy = vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     );
     const killSpy = vi.spyOn(
@@ -49,6 +49,7 @@ describe('UCI', () => {
     );
 
     try {
+      // eslint-disable-next-line unicorn/no-nonstandard-builtin-properties
       await uci[Symbol.dispose]();
     } catch {
       // ignore
@@ -111,7 +112,7 @@ describe('UCI', () => {
   it('debug(true) sends "debug on"', async () => {
     const uci = new UCI('/invalid/path');
     const spy = vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     );
 
@@ -127,7 +128,7 @@ describe('UCI', () => {
   it('debug(false) sends "debug off"', async () => {
     const uci = new UCI('/invalid/path');
     const spy = vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     );
 
@@ -173,10 +174,10 @@ describe('UCI', () => {
     const uci = new UCI('/invalid/path');
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
     vi.spyOn(
       uci as unknown as { ready: () => Promise<void> },
@@ -191,7 +192,7 @@ describe('UCI', () => {
   it('position() resets move history', async () => {
     const uci = new UCI('/invalid/path');
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     ).mockResolvedValue();
     vi.spyOn(
@@ -208,10 +209,10 @@ describe('UCI', () => {
     // After position(), a ponder call should use empty moves list
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
 
     await uci.ponder('e7e5');
@@ -225,10 +226,10 @@ describe('UCI', () => {
     const uci = new UCI('/invalid/path');
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
     vi.spyOn(
       uci as unknown as { ready: () => Promise<void> },
@@ -247,11 +248,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -277,11 +278,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -309,11 +310,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -341,11 +342,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -376,11 +377,11 @@ describe('UCI', () => {
     ).mockReturnValue();
     const executeSpy = vi
       .spyOn(
-        uci as unknown as { execute: (cmd: string) => Promise<void> },
+        uci as unknown as { execute: (command: string) => Promise<void> },
         'execute',
       )
-      .mockImplementation(async (cmd) => {
-        if (cmd === 'isready') {
+      .mockImplementation(async (command) => {
+        if (command === 'isready') {
           void ingest('readyok');
         }
       });
@@ -391,7 +392,9 @@ describe('UCI', () => {
 
     await uci.start();
 
-    const goCall = executeSpy.mock.calls.find(([cmd]) => cmd.startsWith('go'));
+    const goCall = executeSpy.mock.calls.find(([command]) =>
+      command.startsWith('go'),
+    );
     expect(goCall?.[0]).toBe('go infinite');
   });
 
@@ -399,10 +402,10 @@ describe('UCI', () => {
     const uci = new UCI('/invalid/path');
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
     vi.spyOn(
       uci as unknown as { ready: () => Promise<void> },
@@ -419,10 +422,10 @@ describe('UCI', () => {
     const uci = new UCI('/invalid/path');
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
     vi.spyOn(
       uci as unknown as { ready: () => Promise<void> },
@@ -455,7 +458,7 @@ describe('UCI', () => {
       errors.push(error);
     });
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     ).mockResolvedValue();
     vi.spyOn(
@@ -479,7 +482,7 @@ describe('UCI', () => {
       errors.push(error);
     });
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     ).mockResolvedValue();
     vi.spyOn(
@@ -499,10 +502,10 @@ describe('UCI', () => {
     const uci = new UCI('/invalid/path');
     const calls: string[] = [];
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
+    ).mockImplementation(async (command) => {
+      calls.push(command);
     });
     vi.spyOn(
       uci as unknown as { ready: () => Promise<void> },
@@ -522,7 +525,7 @@ describe('UCI', () => {
       errors.push(error);
     });
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     ).mockResolvedValue();
     vi.spyOn(
@@ -545,11 +548,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -574,11 +577,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -602,11 +605,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -630,11 +633,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -658,11 +661,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -686,11 +689,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -715,11 +718,11 @@ describe('UCI', () => {
     const ingest = (line: string) =>
       (uci as unknown as { ingest: (l: string) => Promise<void> }).ingest(line);
     vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
-    ).mockImplementation(async (cmd) => {
-      calls.push(cmd);
-      if (cmd === 'isready') {
+    ).mockImplementation(async (command) => {
+      calls.push(command);
+      if (command === 'isready') {
         void ingest('readyok');
       }
     });
@@ -778,7 +781,7 @@ describe('UCI', () => {
 
     // Second ready() should attempt a fresh handshake (send isready again)
     const executeSpy = vi.spyOn(
-      uci as unknown as { execute: (cmd: string) => Promise<void> },
+      uci as unknown as { execute: (command: string) => Promise<void> },
       'execute',
     );
 
@@ -786,7 +789,7 @@ describe('UCI', () => {
 
     await new Promise<void>((resolve) => setTimeout(resolve, 50));
     const isreadyCalls = executeSpy.mock.calls.filter(
-      ([cmd]) => cmd === 'isready',
+      ([command]) => command === 'isready',
     );
     expect(isreadyCalls.length).toBeGreaterThan(0);
   });
