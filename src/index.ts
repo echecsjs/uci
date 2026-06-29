@@ -300,6 +300,7 @@ class UCI {
     this.#lines = value;
   }
 
+  // eslint-disable-next-line unicorn/no-nonstandard-builtin-properties
   async [Symbol.dispose](): Promise<void> {
     await this.execute('quit');
     this.process.kill();
