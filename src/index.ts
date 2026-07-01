@@ -301,7 +301,7 @@ class UCI {
   }
 
   // eslint-disable-next-line unicorn/no-nonstandard-builtin-properties
-  async [Symbol.dispose](): Promise<void> {
+  async [Symbol.asyncDispose](): Promise<void> {
     await this.execute('quit');
     this.process.kill();
   }

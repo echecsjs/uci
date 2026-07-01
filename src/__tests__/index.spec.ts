@@ -50,7 +50,7 @@ describe('UCI', () => {
 
     try {
       // eslint-disable-next-line unicorn/no-nonstandard-builtin-properties
-      await uci[Symbol.dispose]();
+      await uci[Symbol.asyncDispose]();
     } catch {
       // ignore
     }
