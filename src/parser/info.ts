@@ -63,11 +63,9 @@ function parseScore(raw: string): Score | undefined {
       return { bound: 'lower', type: 'cp', value };
     }
 
-    if (hasUpperbound) {
-      return { bound: 'upper', type: 'cp', value };
-    }
-
-    return { type: 'cp', value };
+    return hasUpperbound
+      ? { bound: 'upper', type: 'cp', value }
+      : { type: 'cp', value };
   }
 
   return { type: 'mate', value };

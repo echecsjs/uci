@@ -35,10 +35,14 @@ interface Name {
   name: string;
 }
 
-/** Options exposed by a UCI engine */
+/**
+Options exposed by a UCI engine
+*/
 type Option = OneOf<[Button, Check, Combo, Spin, Stringy]> & Name;
 
-/** Events emitted by the UCI engine wrapper */
+/**
+Events emitted by the UCI engine wrapper
+*/
 interface Events {
   bestmove: { move: string | undefined; ponder?: string };
   copyprotection: string;
@@ -52,7 +56,9 @@ interface Events {
   uciok: undefined;
 }
 
-/** Parameters for the UCI `go` command */
+/**
+Parameters for the UCI `go` command
+*/
 interface GoOptions {
   binc?: number;
   btime?: number;
@@ -66,20 +72,26 @@ interface GoOptions {
   wtime?: number;
 }
 
-/** Engine identity (name + author) */
+/**
+Engine identity (name + author)
+*/
 interface ID {
   author: string;
   name: string;
 }
 
-/** Score from the engine — centipawns or mate distance, with optional bound */
+/**
+Score from the engine — centipawns or mate distance, with optional bound
+*/
 type Score =
   | { bound: 'lower'; type: 'cp'; value: number }
   | { bound: 'upper'; type: 'cp'; value: number }
   | { bound?: never; type: 'cp'; value: number }
   | { bound?: never; type: 'mate'; value: number };
 
-/** Information emitted by the engine via `info` command */
+/**
+Information emitted by the engine via `info` command
+*/
 interface InfoCommand {
   cpuload?: number;
   current?: { line?: string[]; move?: string; number?: number };
