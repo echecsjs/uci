@@ -162,31 +162,17 @@ class UCI {
   ): Promise<void> {
     await this.ready();
 
-    const parts: string[] = ['go'];
-
-    if (isPondering) {
-      parts.push('ponder');
-    }
-
-    if (options.wtime !== undefined) {
-      parts.push('wtime', String(options.wtime));
-    }
-
-    if (options.btime !== undefined) {
-      parts.push('btime', String(options.btime));
-    }
-
-    if (options.winc !== undefined) {
-      parts.push('winc', String(options.winc));
-    }
-
-    if (options.binc !== undefined) {
-      parts.push('binc', String(options.binc));
-    }
-
-    if (options.movestogo !== undefined) {
-      parts.push('movestogo', String(options.movestogo));
-    }
+    const parts: string[] = [
+      'go',
+      ...(isPondering ? ['ponder'] : []),
+      ...(options.wtime === undefined ? [] : ['wtime', String(options.wtime)]),
+      ...(options.btime === undefined ? [] : ['btime', String(options.btime)]),
+      ...(options.winc === undefined ? [] : ['winc', String(options.winc)]),
+      ...(options.binc === undefined ? [] : ['binc', String(options.binc)]),
+      ...(options.movestogo === undefined
+        ? []
+        : ['movestogo', String(options.movestogo)]),
+    ];
 
     const depth =
       options.depth ?? (this.#depth === 'infinite' ? undefined : this.#depth);
@@ -300,7 +286,6 @@ class UCI {
     this.#lines = value;
   }
 
-  // eslint-disable-next-line unicorn/no-nonstandard-builtin-properties
   async [Symbol.asyncDispose](): Promise<void> {
     await this.execute('quit');
     this.process.kill();
@@ -348,11 +333,13 @@ class UCI {
     listener: (data: Events[K]) => void | Promise<void>,
   ): void {
     const wrapped = this.#listeners.get(listener);
-    if (wrapped) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.#emitter.off(event, wrapped as any);
-      this.#listeners.delete(listener);
+    if (!wrapped) {
+      return;
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.#emitter.off(event, wrapped as any);
+    this.#listeners.delete(listener);
   }
 
   on<K extends keyof Events>(
