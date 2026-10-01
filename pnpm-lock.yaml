@@ -10,7 +10,7 @@ importers:
     dependencies:
       emittery:
         specifier: ^2.0.0
-        version: 2.0.0
+        version: 2.1.0
       zod:
         specifier: ^4.3.6
         version: 4.6.5
@@ -1094,8 +1094,8 @@ packages:
   electron-to-chromium@1.5.433:
     resolution: {integrity: sha512-5lCAbyZBjtmUt/RAGHRqrL2q0oEFRThDAsZHHDn9XHa89Qw7gMYOeSicBTy+AHfvo0r6vwsZvqNJTQIQy1BLzA==}
 
-  emittery@2.0.0:
-    resolution: {integrity: sha512-FLtgn/CGBXiX3ZtPAm5q4LWWepHChOt55J9u01WFu3dyap2U7IwptlrqoE1COR/kxwdy/DOxIBALSxIW449I1g==}
+  emittery@2.1.0:
+    resolution: {integrity: sha512-cPP/ddRdWhEQz7+R/QJi22O2iA73YuNWJRgDM2SUVEKA3XRPiv9f5cfGb508s+124sEBlnewHq/CiSOuIyewHg==}
     engines: {node: '>=22'}
 
   empathic@2.0.1:
@@ -2633,7 +2633,7 @@ snapshots:
 
   electron-to-chromium@1.5.433: {}
 
-  emittery@2.0.0: {}
+  emittery@2.1.0: {}
 
   empathic@2.0.1: {}
 
