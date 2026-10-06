@@ -71,13 +71,20 @@ await engine.start();
 ### Creating an engine
 
 ```typescript
-new UCI(path: string, options?: { config?: Record<string, unknown>; timeout?: number })
+new UCI(path: string, options?: {
+  config?: Record<string, unknown>;
+  process?: EngineProcess;
+  timeout?: number;
+})
 ```
 
 `path` is the path to the UCI engine binary. `timeout` (default 5000 ms) is how
 long to wait for the engine to respond to the initial `uci` command before
 emitting an error. `config` is an optional map of `setoption` values applied
-once after the UCI handshake.
+once after the UCI handshake. `process` replaces the default Node.js subprocess
+with a custom `EngineProcess` implementation (see
+[Running outside Node.js](#running-outside-nodejs-eg-tauri)) — when it is given,
+`path` is unused by the library itself.
 
 ```typescript
 const engine = new UCI('/usr/bin/stockfish');
@@ -86,6 +93,50 @@ const engine = new UCI('/usr/bin/stockfish', {
   config: { Hash: 256, Threads: 4 },
 });
 ```
+
+### Running outside Node.js (e.g. Tauri)
+
+By default the library spawns the engine with Node.js `child_process`. In other
+runtimes — a Tauri app, for example — implement the `EngineProcess` interface
+and inject it via the constructor options:
+
+```typescript
+import { Command } from '@tauri-apps/plugin-shell';
+import UCI, { type EngineProcess } from '@echecs/uci';
+
+class TauriEngineProcess implements EngineProcess {
+  readonly command = Command.create('engine'); // configured in tauri.conf.json
+
+  kill(): void {
+    void this.command.kill();
+  }
+
+  onError(listener: (error: Error) => void): void {
+    void this.command.stderr.on('data', (line) => listener(new Error(line)));
+  }
+
+  onExit(listener: (code: number) => void): void {
+    void this.command.on('close', ({ code }) => listener(code ?? 0));
+  }
+
+  onStdout(listener: (data: string) => void): void {
+    void this.command.stdout.on('data', (line) => listener(`${line}\n`));
+  }
+
+  async write(input: string): Promise<void> {
+    await this.command.write(input);
+  }
+}
+
+const child = new TauriEngineProcess();
+await child.command.spawn(); // start the engine process
+
+const engine = new UCI('stockfish', { process: child });
+```
+
+Implementations receive raw stdout strings and may deliver them in chunks of any
+size — line buffering is handled internally. `write` receives full
+newline-terminated commands.
 
 ### Starting a search
 
@@ -344,6 +395,19 @@ engine.on('uciok',          () => void)
 ## API
 
 Full API reference is available at https://uci.echecs.dev/
+
+The `EngineProcess` interface — the integration point for non-Node runtimes — is
+exported from the package root:
+
+```typescript
+interface EngineProcess {
+  kill(): void;
+  onError(listener: (error: Error) => void): void;
+  onExit(listener: (code: number) => void): void;
+  onStdout(listener: (data: string) => void): void;
+  write(input: string): Promise<void>;
+}
+```
 
 ## Contributing
 
