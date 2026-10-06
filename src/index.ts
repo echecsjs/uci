@@ -1,10 +1,11 @@
 import Emittery from 'emittery';
 
+import NodeProcess from './node-process.js';
 import Options from './options.js';
 import { parsers } from './parser/index.js';
 import Process from './process.js';
 
-import type { Events, GoOptions, ID } from './types.js';
+import type { EngineProcess, Events, GoOptions, ID } from './types.js';
 
 interface RegisterOptions {
   code: string;
@@ -114,19 +115,25 @@ class UCI {
     path: string,
     {
       config = {},
+      process: engineProcess,
       timeout,
-    }: { config?: Record<string, unknown>; timeout?: number } = {},
+    }: {
+      config?: Record<string, unknown>;
+      process?: EngineProcess;
+      timeout?: number;
+    } = {},
   ) {
     this.#timeout = timeout ?? TIMEOUT;
     this.#config = config;
-    this.process = new Process(path);
+    this.process = new Process(engineProcess ?? new NodeProcess(path));
 
     this.process.on('line', ({ data }) => this.ingest(data));
     this.process.on('error', ({ data }) => this.#emitter.emit('error', data));
 
-    // Store the ID of the engine
+    // Store the ID of the engine (id name and id author arrive as
+    // separate id events — merge them)
     this.#emitter.on('id', ({ data: id }) => {
-      this.#id = id;
+      this.#id = { ...this.#id, ...id };
     });
     // Define the available options
     this.#emitter.on('option', ({ data: option }) => {
@@ -465,6 +472,7 @@ class UCI {
 export default UCI;
 export type { RegisterOptions };
 export type {
+  EngineProcess,
   Events,
   GoOptions,
   ID,
