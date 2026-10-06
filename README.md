@@ -104,32 +104,41 @@ and inject it via the constructor options:
 import { Command } from '@tauri-apps/plugin-shell';
 import UCI, { type EngineProcess } from '@echecs/uci';
 
+import type { Child } from '@tauri-apps/plugin-shell';
+
 class TauriEngineProcess implements EngineProcess {
-  readonly command = Command.create('engine'); // configured in tauri.conf.json
+  // 'engine' must be configured in your Tauri capabilities
+  readonly #command = Command.create('engine');
+  #child: Child | undefined;
 
   kill(): void {
-    void this.command.kill();
+    void this.#child?.kill();
   }
 
   onError(listener: (error: Error) => void): void {
-    void this.command.stderr.on('data', (line) => listener(new Error(line)));
+    this.#command.on('error', (message) => listener(new Error(message)));
+    this.#command.stderr.on('data', (line) => listener(new Error(line)));
   }
 
   onExit(listener: (code: number) => void): void {
-    void this.command.on('close', ({ code }) => listener(code ?? 0));
+    this.#command.on('close', ({ code }) => listener(code ?? 0));
   }
 
   onStdout(listener: (data: string) => void): void {
-    void this.command.stdout.on('data', (line) => listener(`${line}\n`));
+    this.#command.stdout.on('data', (line) => listener(`${line}\n`));
   }
 
   async write(input: string): Promise<void> {
-    await this.command.write(input);
+    await this.#child?.write(input);
+  }
+
+  async spawn(): Promise<void> {
+    this.#child = await this.#command.spawn();
   }
 }
 
 const child = new TauriEngineProcess();
-await child.command.spawn(); // start the engine process
+await child.spawn(); // start the engine process
 
 const engine = new UCI('stockfish', { process: child });
 ```
@@ -137,6 +146,10 @@ const engine = new UCI('stockfish', { process: child });
 Implementations receive raw stdout strings and may deliver them in chunks of any
 size — line buffering is handled internally. `write` receives full
 newline-terminated commands.
+
+Note: the package entry still imports `node:child_process` statically, so
+bundling `@echecs/uci` for a non-Node runtime requires stubbing or externalizing
+Node builtins in your bundler configuration.
 
 ### Starting a search
 
