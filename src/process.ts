@@ -1,8 +1,8 @@
 import Emittery from 'emittery';
-import * as process from 'node:child_process';
+
+import type { EngineProcess } from './types.js';
 
 interface Events {
-  disconnect: undefined;
   error: Error;
   exit: number;
   line: string;
@@ -10,17 +10,17 @@ interface Events {
 
 class Process extends Emittery<Events> {
   private buffer = '';
-  private child: process.ChildProcessWithoutNullStreams;
 
-  constructor(path: string) {
+  private readonly child: EngineProcess;
+
+  constructor(child: EngineProcess) {
     super();
 
-    this.child = process.spawn(path);
+    this.child = child;
 
-    this.child.on('disconnect', () => this.emit('disconnect'));
-    this.child.on('error', (error) => this.emit('error', error));
-    this.child.on('exit', (code) => this.emit('exit', code ?? 0));
-    this.child.stdout.on('data', (data) => {
+    this.child.onError((error) => this.emit('error', error));
+    this.child.onExit((code) => this.emit('exit', code));
+    this.child.onStdout((data) => {
       this.buffer += data;
 
       const lines = this.buffer.split('\n');
@@ -30,13 +30,6 @@ class Process extends Emittery<Events> {
         this.emit('line', line);
       }
     });
-    this.child.stderr.on('data', (data) =>
-      this.emit('error', new Error(data.toString().trim())),
-    );
-  }
-
-  disconnect(): void {
-    this.child.disconnect();
   }
 
   kill(): void {
@@ -44,14 +37,7 @@ class Process extends Emittery<Events> {
   }
 
   async write(input: string): Promise<void> {
-    return new Promise((ok, ko) => {
-      this.child.stdin.write(input, 'utf8', (error) => {
-        if (error) {
-          return ko(error);
-        }
-        ok();
-      });
-    });
+    return this.child.write(input);
   }
 }
 

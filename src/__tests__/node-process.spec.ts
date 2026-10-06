@@ -62,4 +62,48 @@ describe('NodeProcess', () => {
       engine.kill();
     }
   });
+
+  it('emits an Error object when stderr receives data', async () => {
+    const errors: Error[] = [];
+    const engine = new NodeProcess('sh');
+    engine.onError((error) => {
+      errors.push(error);
+    });
+
+    try {
+      await engine.write('echo "stderr message" >&2\n');
+      await until(() => errors.length > 0);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0]?.message).toBe('stderr message');
+    } finally {
+      engine.kill();
+    }
+  });
+
+  it('forwards the exit code', async () => {
+    const exits: number[] = [];
+    const engine = new NodeProcess('sh');
+    engine.onExit((code) => {
+      exits.push(code);
+    });
+
+    await engine.write('exit 42\n');
+    await until(() => exits.length > 0);
+    expect(exits[0]).toBe(42);
+  });
+
+  it('rejects write() when stdin is closed', async () => {
+    const engine = new NodeProcess('sh');
+
+    const exited = new Promise<void>((resolve) => {
+      engine.onExit(() => {
+        resolve();
+      });
+    });
+
+    engine.kill();
+    await exited;
+
+    await expect(engine.write('echo hello\n')).rejects.toBeInstanceOf(Error);
+  });
 });

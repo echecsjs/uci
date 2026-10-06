@@ -1,5 +1,6 @@
 import Emittery from 'emittery';
 
+import NodeProcess from './node-process.js';
 import Options from './options.js';
 import { parsers } from './parser/index.js';
 import Process from './process.js';
@@ -119,7 +120,7 @@ class UCI {
   ) {
     this.#timeout = timeout ?? TIMEOUT;
     this.#config = config;
-    this.process = new Process(path);
+    this.process = new Process(new NodeProcess(path));
 
     this.process.on('line', ({ data }) => this.ingest(data));
     this.process.on('error', ({ data }) => this.#emitter.emit('error', data));
