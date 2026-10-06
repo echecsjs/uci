@@ -73,6 +73,19 @@ interface GoOptions {
 }
 
 /**
+A running engine process. Implement this interface to run engines outside
+Node.js (e.g. in Tauri via its shell plugin) and inject the instance through
+`new UCI(path, { process })`.
+*/
+interface EngineProcess {
+  kill(): void;
+  onError(listener: (error: Error) => void): void;
+  onExit(listener: (code: number) => void): void;
+  onStdout(listener: (data: string) => void): void;
+  write(input: string): Promise<void>;
+}
+
+/**
 Engine identity (name + author)
 */
 interface ID {
@@ -109,4 +122,12 @@ interface InfoCommand {
   time?: number;
 }
 
-export type { Events, GoOptions, ID, InfoCommand, Option, Score };
+export type {
+  EngineProcess,
+  Events,
+  GoOptions,
+  ID,
+  InfoCommand,
+  Option,
+  Score,
+};
