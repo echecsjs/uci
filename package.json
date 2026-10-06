@@ -7,7 +7,7 @@
     "emittery": "^2.0.0",
     "zod": "^4.3.6"
   },
-  "description": "Universal Chess Interface (UCI) wrapper for Node.js. Spawns and communicates with UCI chess engines (Stockfish, Komodo, etc.) via a typed event-emitter API.",
+  "description": "Universal Chess Interface (UCI) wrapper. Spawns and communicates with UCI chess engines (Stockfish, Komodo, etc.) via a typed event-emitter API. Runs on Node.js out of the box; other runtimes can inject their own process.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.0.0",
@@ -86,5 +86,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "4.1.0"
+  "version": "4.2.0"
 }

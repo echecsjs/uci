@@ -8,6 +8,24 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-10-06
+
+### Added
+
+- `EngineProcess` interface and `process` constructor option — run engines
+  outside Node.js (e.g. Tauri) by injecting a custom process:
+  `new UCI(path, { process })`. Design by @AlanDThiessen (#229, #233)
+
+### Changed
+
+- Upgraded `zod` from 3 to 4 — internal option validation only, no public API
+  change
+
+### Fixed
+
+- `id()` returned only the last `id` line (author without name) — `id name` and
+  `id author` are now merged
+
 ## [4.1.0] - 2026-04-26
 
 ### Changed
