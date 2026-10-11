@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig({
+const config = defineConfig({
   test: {
     coverage: {
       // noop.ts is an intentionally empty function. v8 cannot instrument an
@@ -10,3 +10,5 @@ export default defineConfig({
     },
   },
 });
+
+export default config;
