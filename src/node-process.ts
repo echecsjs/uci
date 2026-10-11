@@ -22,7 +22,7 @@ class NodeProcess implements EngineProcess {
       this.#notifyError(error);
     });
     this.#child.on('exit', (code) => {
-      this.#notifyExit(code ?? 0);
+      this.#notifyExit(code);
     });
     this.#child.stdout.on('data', (data) => {
       this.#notifyStdout(data.toString());
@@ -38,9 +38,9 @@ class NodeProcess implements EngineProcess {
     }
   }
 
-  #notifyExit(code: number): void {
+  #notifyExit(code: number | null): void {
     for (const listener of this.#exitListeners) {
-      listener(code);
+      listener(code === null ? 0 : code);
     }
   }
 

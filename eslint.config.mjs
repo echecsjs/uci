@@ -5,7 +5,7 @@ import * as importing from 'eslint-plugin-import-x';
 import unicorn from 'eslint-plugin-unicorn';
 import * as typescript from 'typescript-eslint';
 
-export default typescript.config(
+const config = typescript.config(
   { ignores: ['tsdown.config.ts'] },
   eslint.configs.recommended,
   ...typescript.configs.strict,
@@ -14,8 +14,8 @@ export default typescript.config(
   importing.flatConfigs.typescript,
   unicorn.configs.recommended,
   /**
-   * Common
-   */
+  Common
+  */
   {
     languageOptions: {
       ecmaVersion: 'latest',
@@ -66,8 +66,8 @@ export default typescript.config(
     },
   },
   /**
-   * TypeScript
-   */
+  TypeScript
+  */
   {
     files: ['**/*.{mts,ts,tsx}'],
     languageOptions: {
@@ -114,8 +114,8 @@ export default typescript.config(
     },
   },
   /**
-   * Config files — disable namespace resolution (no tsconfig context)
-   */
+  Config files — disable namespace resolution (no tsconfig context)
+  */
   {
     files: ['*.mjs'],
     rules: {
@@ -123,8 +123,8 @@ export default typescript.config(
     },
   },
   /**
-   * Tests
-   */
+  Tests
+  */
   {
     files: ['**/__tests__/**/*.ts', '**/*.spec.ts', '**/*.test.ts'],
     plugins: { vitest },
@@ -137,3 +137,5 @@ export default typescript.config(
   },
   prettier,
 );
+
+export default config;
