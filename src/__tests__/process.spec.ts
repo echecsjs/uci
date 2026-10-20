@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import EngineProcess from '../engine-process.js';
 import Process from '../process.js';
-
-import type { EngineProcess } from '../types.js';
 
 const flush = async (): Promise<void> => {
   await new Promise((resolve) => {
@@ -10,45 +9,12 @@ const flush = async (): Promise<void> => {
   });
 };
 
-class FakeEngineProcess implements EngineProcess {
-  readonly #errorListeners: ((error: Error) => void)[] = [];
-  readonly #exitListeners: ((code: number) => void)[] = [];
-  readonly #stdoutListeners: ((data: string) => void)[] = [];
+class FakeEngineProcess extends EngineProcess {
   readonly writes: string[] = [];
   killed = false;
 
-  emitError(error: Error): void {
-    for (const listener of this.#errorListeners) {
-      listener(error);
-    }
-  }
-
-  emitExit(code: number): void {
-    for (const listener of this.#exitListeners) {
-      listener(code);
-    }
-  }
-
-  emitStdout(data: string): void {
-    for (const listener of this.#stdoutListeners) {
-      listener(data);
-    }
-  }
-
   kill(): void {
     this.killed = true;
-  }
-
-  onError(listener: (error: Error) => void): void {
-    this.#errorListeners.push(listener);
-  }
-
-  onExit(listener: (code: number) => void): void {
-    this.#exitListeners.push(listener);
-  }
-
-  onStdout(listener: (data: string) => void): void {
-    this.#stdoutListeners.push(listener);
   }
 
   async write(input: string): Promise<void> {
@@ -65,8 +31,8 @@ describe('Process', () => {
       lines.push(data);
     });
 
-    fake.emitStdout('ucio');
-    fake.emitStdout('k\n');
+    await fake.emit('stdout', 'ucio');
+    await fake.emit('stdout', 'k\n');
     await flush();
     expect(lines).toEqual(['uciok']);
   });
@@ -79,11 +45,11 @@ describe('Process', () => {
       lines.push(data);
     });
 
-    fake.emitStdout('best');
+    await fake.emit('stdout', 'best');
     await flush();
     expect(lines).toEqual([]);
 
-    fake.emitStdout('move e2e4\n');
+    await fake.emit('stdout', 'move e2e4\n');
     await flush();
     expect(lines).toEqual(['bestmove e2e4']);
   });
@@ -96,7 +62,7 @@ describe('Process', () => {
       lines.push(data);
     });
 
-    fake.emitStdout('uciok\nreadyok\n');
+    await fake.emit('stdout', 'uciok\nreadyok\n');
     await flush();
     expect(lines).toEqual(['uciok', 'readyok']);
   });
@@ -109,7 +75,7 @@ describe('Process', () => {
       lines.push(data);
     });
 
-    fake.emitStdout('before\n\nafter\n');
+    await fake.emit('stdout', 'before\n\nafter\n');
     await flush();
     expect(lines).toEqual(['before', '', 'after']);
   });
@@ -123,7 +89,7 @@ describe('Process', () => {
     });
 
     const boom = new Error('boom');
-    fake.emitError(boom);
+    await fake.emit('error', boom);
     await flush();
     expect(errors).toEqual([boom]);
   });
@@ -136,7 +102,7 @@ describe('Process', () => {
       exits.push(data);
     });
 
-    fake.emitExit(3);
+    await fake.emit('exit', 3);
     await flush();
     expect(exits).toEqual([3]);
   });
