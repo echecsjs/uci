@@ -1,13 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import EngineProcess from '../engine-process.js';
-import UCI from '../index.js';
+import { UCI } from '../index.js';
 
 class FakeEngineProcess extends EngineProcess {
   #rejectNextWrite = false;
+  readonly path: string;
   readonly writes: string[] = [];
   killed = false;
   shouldAnswerIsready = true;
+
+  constructor(path = '') {
+    super();
+
+    this.path = path;
+    instances.push(this);
+  }
 
   kill(): void {
     this.killed = true;
@@ -42,7 +50,18 @@ const flush = async (): Promise<void> => {
   });
 };
 
+const instances: FakeEngineProcess[] = [];
+
 describe('UCI with custom process', () => {
+  it('accepts a process class and instantiates it with the engine path', async () => {
+    const uci = new UCI('/engines/stockfish', { process: FakeEngineProcess });
+
+    const id = await uci.id();
+
+    expect(id).toEqual({ author: 'Me', name: 'Test' });
+    expect(instances.at(-1)?.path).toBe('/engines/stockfish');
+  });
+
   it('handshakes and reports the engine id', async () => {
     const fake = new FakeEngineProcess();
     const uci = new UCI('', { process: fake });

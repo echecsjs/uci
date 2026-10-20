@@ -120,13 +120,19 @@ class UCI {
       timeout,
     }: {
       config?: Record<string, unknown>;
-      process?: EngineProcess;
+      process?: EngineProcess | (new (path: string) => EngineProcess);
       timeout?: number;
     } = {},
   ) {
     this.#timeout = timeout ?? TIMEOUT;
     this.#config = config;
-    this.process = new Process(engineProcess ?? new NodeProcess(path));
+
+    const child =
+      typeof engineProcess === 'function'
+        ? new engineProcess(path)
+        : (engineProcess ?? new NodeProcess(path));
+
+    this.process = new Process(child);
 
     this.process.on('line', ({ data }) => this.ingest(data));
     this.process.on('error', ({ data }) => this.#emitter.emit('error', data));
