@@ -17,7 +17,7 @@ describe('NodeProcess', () => {
   it('echoes written input back on stdout', async () => {
     const chunks: string[] = [];
     const engine = new NodeProcess('cat');
-    engine.onStdout((data) => {
+    engine.on('stdout', ({ data }) => {
       chunks.push(data);
     });
 
@@ -33,8 +33,8 @@ describe('NodeProcess', () => {
   it('reports exit code 0 after kill', async () => {
     const exits: number[] = [];
     const engine = new NodeProcess('cat');
-    engine.onExit((code) => {
-      exits.push(code);
+    engine.on('exit', ({ data }) => {
+      exits.push(data);
     });
 
     engine.kill();
@@ -46,10 +46,10 @@ describe('NodeProcess', () => {
     const first: string[] = [];
     const second: string[] = [];
     const engine = new NodeProcess('cat');
-    engine.onStdout((data) => {
+    engine.on('stdout', ({ data }) => {
       first.push(data);
     });
-    engine.onStdout((data) => {
+    engine.on('stdout', ({ data }) => {
       second.push(data);
     });
 
@@ -66,8 +66,8 @@ describe('NodeProcess', () => {
   it('emits an Error object when stderr receives data', async () => {
     const errors: Error[] = [];
     const engine = new NodeProcess('sh');
-    engine.onError((error) => {
-      errors.push(error);
+    engine.on('error', ({ data }) => {
+      errors.push(data);
     });
 
     try {
@@ -83,8 +83,8 @@ describe('NodeProcess', () => {
   it('forwards the exit code', async () => {
     const exits: number[] = [];
     const engine = new NodeProcess('sh');
-    engine.onExit((code) => {
-      exits.push(code);
+    engine.on('exit', ({ data }) => {
+      exits.push(data);
     });
 
     await engine.write('exit 42\n');
@@ -96,7 +96,7 @@ describe('NodeProcess', () => {
     const engine = new NodeProcess('sh');
 
     const exited = new Promise<void>((resolve) => {
-      engine.onExit(() => {
+      engine.on('exit', () => {
         resolve();
       });
     });

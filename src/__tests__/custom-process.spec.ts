@@ -1,50 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import EngineProcess from '../engine-process.js';
 import UCI from '../index.js';
 
-import type { EngineProcess } from '../types.js';
-
-class FakeEngineProcess implements EngineProcess {
-  readonly #errorListeners: ((error: Error) => void)[] = [];
-  readonly #exitListeners: ((code: number) => void)[] = [];
+class FakeEngineProcess extends EngineProcess {
   #rejectNextWrite = false;
-  readonly #stdoutListeners: ((data: string) => void)[] = [];
   readonly writes: string[] = [];
   killed = false;
   shouldAnswerIsready = true;
 
-  emitError(error: Error): void {
-    for (const listener of this.#errorListeners) {
-      listener(error);
-    }
-  }
-
-  emitExit(code: number): void {
-    for (const listener of this.#exitListeners) {
-      listener(code);
-    }
-  }
-
-  emitStdout(data: string): void {
-    for (const listener of this.#stdoutListeners) {
-      listener(data);
-    }
-  }
-
   kill(): void {
     this.killed = true;
-  }
-
-  onError(listener: (error: Error) => void): void {
-    this.#errorListeners.push(listener);
-  }
-
-  onExit(listener: (code: number) => void): void {
-    this.#exitListeners.push(listener);
-  }
-
-  onStdout(listener: (data: string) => void): void {
-    this.#stdoutListeners.push(listener);
   }
 
   rejectNextWrite(): void {
@@ -61,11 +27,11 @@ class FakeEngineProcess implements EngineProcess {
 
     // Keep the handshake working without a real engine
     if (input === 'uci\n') {
-      this.emitStdout('id name Test\nid author Me\nuciok\n');
+      await this.emit('stdout', 'id name Test\nid author Me\nuciok\n');
     }
 
     if (input === 'isready\n' && this.shouldAnswerIsready) {
-      this.emitStdout('readyok\n');
+      await this.emit('stdout', 'readyok\n');
     }
   }
 }
@@ -114,7 +80,7 @@ describe('UCI with custom process', () => {
     });
 
     const boom = new Error('boom');
-    fake.emitError(boom);
+    await fake.emit('error', boom);
     await flush();
 
     expect(errors).toContain(boom);
@@ -149,7 +115,7 @@ describe('UCI with custom process', () => {
     // Give ready() one tick to register its exit listener
     await Promise.resolve();
 
-    fake.emitExit(1);
+    await fake.emit('exit', 1);
     await ready;
     await flush();
 
