@@ -8,6 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Removed
+
+- `EngineProcess` interface — replaced by an abstract base class extending
+  `Emittery`. `onError`, `onExit`, and `onStdout` are gone; subscribe with
+  `on('error' | 'exit' | 'stdout', listener)` (listeners receive the Emittery
+  `{ data }` envelope). **Breaking** — the next release is 5.0.0.
+
+### Added
+
+- `EngineProcess` is now a runtime class export — extend it in any runtime
+  (Tauri, Deno, browsers) and inject via `new UCI(path, { process })`
+- The `process` option accepts a class as well as an instance; the class is
+  constructed with the engine path
+- Named export `UCI` alongside the default export
+
 ## [4.2.0] - 2026-10-06
 
 ### Added

@@ -73,7 +73,7 @@ await engine.start();
 ```typescript
 new UCI(path: string, options?: {
   config?: Record<string, unknown>;
-  process?: EngineProcess;
+  process?: EngineProcess | (new (path: string) => EngineProcess);
   timeout?: number;
 })
 ```
@@ -82,9 +82,11 @@ new UCI(path: string, options?: {
 long to wait for the engine to respond to the initial `uci` command before
 emitting an error. `config` is an optional map of `setoption` values applied
 once after the UCI handshake. `process` replaces the default Node.js subprocess
-with a custom `EngineProcess` implementation (see
-[Running outside Node.js](#running-outside-nodejs-eg-tauri)) — when it is given,
-`path` is unused by the library itself.
+with a custom `EngineProcess` — either an instance, or the class itself (extend
+the base class; see
+[Running outside Node.js](#running-outside-nodejs-eg-tauri)). When an instance
+is given, `path` is unused by the library itself; when a class is given, the
+library constructs it with `path`.
 
 ```typescript
 const engine = new UCI('/usr/bin/stockfish');
@@ -97,43 +99,50 @@ const engine = new UCI('/usr/bin/stockfish', {
 ### Running outside Node.js (e.g. Tauri)
 
 By default the library spawns the engine with Node.js `child_process`. In other
-runtimes — a Tauri app, for example — implement the `EngineProcess` interface
-and inject it via the constructor options:
+runtimes — a Tauri app, for example — extend the `EngineProcess` base class and
+inject it via the constructor options. Implement `kill()` and `write()`, and
+emit `error`, `exit`, and `stdout` events as the engine produces them. Emit from
+the process callbacks, not from your constructor — events emitted before the
+library attaches its listeners are dropped.
 
 ```typescript
 import { Command } from '@tauri-apps/plugin-shell';
-import UCI, { type EngineProcess } from '@echecs/uci';
+import { EngineProcess, UCI } from '@echecs/uci';
 
 import type { Child } from '@tauri-apps/plugin-shell';
 
-class TauriEngineProcess implements EngineProcess {
+class TauriEngineProcess extends EngineProcess {
   // 'engine' must be configured in your Tauri capabilities
   readonly #command = Command.create('engine');
   #child: Child | undefined;
+
+  constructor() {
+    super();
+
+    this.#command.on('error', (message) => {
+      void this.emit('error', new Error(message));
+    });
+    this.#command.stderr.on('data', (line) => {
+      void this.emit('error', new Error(line));
+    });
+    this.#command.on('close', ({ code }) => {
+      void this.emit('exit', code ?? 0);
+    });
+    this.#command.stdout.on('data', (line) => {
+      void this.emit('stdout', `${line}\n`);
+    });
+  }
+
+  async spawn(): Promise<void> {
+    this.#child = await this.#command.spawn();
+  }
 
   kill(): void {
     void this.#child?.kill();
   }
 
-  onError(listener: (error: Error) => void): void {
-    this.#command.on('error', (message) => listener(new Error(message)));
-    this.#command.stderr.on('data', (line) => listener(new Error(line)));
-  }
-
-  onExit(listener: (code: number) => void): void {
-    this.#command.on('close', ({ code }) => listener(code ?? 0));
-  }
-
-  onStdout(listener: (data: string) => void): void {
-    this.#command.stdout.on('data', (line) => listener(`${line}\n`));
-  }
-
   async write(input: string): Promise<void> {
     await this.#child?.write(input);
-  }
-
-  async spawn(): Promise<void> {
-    this.#child = await this.#command.spawn();
   }
 }
 
@@ -141,6 +150,8 @@ const child = new TauriEngineProcess();
 await child.spawn(); // start the engine process
 
 const engine = new UCI('stockfish', { process: child });
+// or inject the class and let the library construct it with the path:
+// const engine = new UCI('stockfish', { process: TauriEngineProcess });
 ```
 
 Implementations receive raw stdout strings and may deliver them in chunks of any
@@ -409,18 +420,22 @@ engine.on('uciok',          () => void)
 
 Full API reference is available at https://uci.echecs.dev/
 
-The `EngineProcess` interface — the integration point for non-Node runtimes — is
-exported from the package root:
+The `EngineProcess` abstract class — the integration point for non-Node runtimes
+— is exported from the package root:
 
 ```typescript
-interface EngineProcess {
-  kill(): void;
-  onError(listener: (error: Error) => void): void;
-  onExit(listener: (code: number) => void): void;
-  onStdout(listener: (data: string) => void): void;
-  write(input: string): Promise<void>;
+abstract class EngineProcess extends Emittery<{
+  error: Error;
+  exit: number;
+  stdout: string;
+}> {
+  abstract kill(): void;
+  abstract write(input: string): Promise<void>;
 }
 ```
+
+Subclasses emit `error`, `exit`, and `stdout` events as the engine produces
+them; listeners receive the Emittery `{ data }` envelope.
 
 ## Contributing
 
