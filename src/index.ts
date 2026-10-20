@@ -5,7 +5,8 @@ import Options from './options.js';
 import { parsers } from './parser/index.js';
 import Process from './process.js';
 
-import type { EngineProcess, Events, GoOptions, ID } from './types.js';
+import type EngineProcess from './engine-process.js';
+import type { Events, GoOptions, ID } from './types.js';
 
 interface RegisterOptions {
   code: string;
@@ -24,91 +25,91 @@ async function suppressRejection(promise: Promise<unknown>): Promise<void> {
 
 class UCI {
   /**
-   * Internal store of the engine options
-   * @private
-   */
+  Internal store of the engine options
+  @private
+  */
   private readonly options = new Options();
 
   private process: Process;
 
   /**
-   * Engine setoption overrides to apply before the first go command.
-   * @private
-   */
+  Engine setoption overrides to apply before the first go command.
+  @private
+  */
   readonly #config: Record<string, unknown>;
 
   /**
-   * Whether #config setoptions have already been sent to the engine.
-   * @private
-   */
+  Whether #config setoptions have already been sent to the engine.
+  @private
+  */
   #configApplied = false;
 
   /**
-   * Internal state of the depth
-   * @private
-   */
+  Internal state of the depth
+  @private
+  */
   #depth: number | 'infinite' = 'infinite';
 
   /**
-   * Internal event emitter.
-   * @private
-   */
+  Internal event emitter.
+  @private
+  */
   readonly #emitter = new Emittery<Events>();
 
   /**
-   * Internal store of the engine id
-   * @private
-   */
+  Internal store of the engine id
+  @private
+  */
   #id: ID | undefined;
 
   /**
-   * Internal state of the number of lines
-   * @private
-   */
+  Internal state of the number of lines
+  @private
+  */
   #lines = 1;
 
   /**
-   * Maps consumer listeners to their emittery v2 wrappers so off() can
-   * unsubscribe the correct reference.
-   * @private
-   */
+  Maps consumer listeners to their emittery v2 wrappers so off() can
+  unsubscribe the correct reference.
+  @private
+  */
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   readonly #listeners = new WeakMap<Function, Function>();
 
   /**
-   * Internal list of moves
-   * @private
-   */
+  Internal list of moves
+  @private
+  */
   #moves: string[] = [];
 
   /**
-   * The speculative ponder move, not yet confirmed as played.
-   * @private
-   */
+  The speculative ponder move, not yet confirmed as played.
+  @private
+  */
   #ponderMove: string | undefined;
 
   /**
-   * Whether the engine is currently in ponder mode.
-   * @private
-   */
+  Whether the engine is currently in ponder mode.
+  @private
+  */
   #pondering = false;
 
   /**
-   * Initial position of the engine
-   * @private
-   */
+  Initial position of the engine
+  @private
+  */
   #position = 'startpos';
 
   /**
-   * Internal state of uciok event
-   * @private
-   */
+  Internal state of uciok event
+  @private
+  */
   readonly #ready: Promise<void>;
 
   /**
-   * Timeout in ms for UCI handshake and isready responses.
-   * @private
-   */
+  Timeout in ms for UCI handshake and isready responses.
+  @private
+  */
   readonly #timeout: number;
 
   constructor(
@@ -470,9 +471,11 @@ class UCI {
 }
 
 export default UCI;
+export { UCI };
+export { default as EngineProcess } from './engine-process.js';
+export type { EngineProcessEvents } from './engine-process.js';
 export type { RegisterOptions };
 export type {
-  EngineProcess,
   Events,
   GoOptions,
   ID,

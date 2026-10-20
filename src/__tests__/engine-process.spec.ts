@@ -78,3 +78,13 @@ describe('EngineProcess', () => {
     expect(chunks).toEqual(['seen\n']);
   });
 });
+
+describe('package exports', () => {
+  it('exports EngineProcess and UCI as runtime values from the index', async () => {
+    const index = await import('../index.js');
+
+    expect(typeof index.EngineProcess).toBe('function');
+    expect(typeof index.UCI).toBe('function');
+    expect(index.default).toBe(index.UCI);
+  });
+});
