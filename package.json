@@ -71,7 +71,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && node --input-type=module -e \"const m = await import('./dist/index.js'); if (typeof m.EngineProcess !== 'function' || typeof m.UCI !== 'function') { throw new Error('runtime exports missing'); } console.log('runtime exports OK');\"",
     "docs": "typedoc",
     "format": "pnpm run format:ci --write",
     "format:ci": "prettier -l \"**/*.+(css|js|json|jsx|md|mjs|mts|ts|tsx|yml|yaml)\"",
@@ -86,5 +86,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "4.2.0"
+  "version": "5.0.0"
 }
