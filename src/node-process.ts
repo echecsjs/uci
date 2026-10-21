@@ -1,69 +1,39 @@
 import { spawn } from 'node:child_process';
 
-import type { EngineProcess } from './types.js';
+import EngineProcess from './engine-process.js';
+
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 
 /**
 Node.js implementation of EngineProcess via child_process.spawn
 */
-class NodeProcess implements EngineProcess {
+class NodeProcess extends EngineProcess {
   readonly #child: ChildProcessWithoutNullStreams;
 
-  readonly #errorListeners: ((error: Error) => void)[] = [];
-
-  readonly #exitListeners: ((code: number) => void)[] = [];
-
-  readonly #stdoutListeners: ((data: string) => void)[] = [];
-
   constructor(path: string) {
+    super();
+
     this.#child = spawn(path);
 
     this.#child.on('error', (error) => {
-      this.#notifyError(error);
+      void this.emit('error', error);
     });
-    this.#child.on('exit', (code) => {
-      this.#notifyExit(code);
+    // Node passes null (not undefined) as the exit code when the process
+    // dies from a signal — a default parameter cannot express this mapping.
+    // eslint-disable-next-line unicorn/prefer-default-parameters
+    this.#child.on('exit', (code: number | null) => {
+      void this.emit('exit', code ?? 0);
     });
     this.#child.stdout.on('data', (data) => {
-      this.#notifyStdout(data.toString());
+      void this.emit('stdout', data.toString());
     });
     this.#child.stderr.on('data', (data) => {
-      this.#notifyError(new Error(data.toString().trim()));
+      void this.emit('error', new Error(data.toString().trim()));
     });
-  }
-
-  #notifyError(error: Error): void {
-    for (const listener of this.#errorListeners) {
-      listener(error);
-    }
-  }
-
-  #notifyExit(code: number | null): void {
-    for (const listener of this.#exitListeners) {
-      listener(code === null ? 0 : code);
-    }
-  }
-
-  #notifyStdout(data: string): void {
-    for (const listener of this.#stdoutListeners) {
-      listener(data);
-    }
   }
 
   kill(): void {
     this.#child.kill();
-  }
-
-  onError(listener: (error: Error) => void): void {
-    this.#errorListeners.push(listener);
-  }
-
-  onExit(listener: (code: number) => void): void {
-    this.#exitListeners.push(listener);
-  }
-
-  onStdout(listener: (data: string) => void): void {
-    this.#stdoutListeners.push(listener);
   }
 
   async write(input: string): Promise<void> {

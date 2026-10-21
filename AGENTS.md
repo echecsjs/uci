@@ -13,29 +13,32 @@ UCI chess engine processes, providing a typed event-emitter API.
 ## Project Overview
 
 `@echecs/uci` wraps a UCI chess engine subprocess and exposes it as a typed
-`Emittery`-based event emitter. The public API is a single default export: the
-`UCI` class. Runtime dependencies: `emittery` (event emitter) and `zod` (option
-validation).
+`Emittery`-based event emitter. The public API exports the `UCI` class (default
+and named), the `EngineProcess` abstract base class for non-Node runtimes, and
+the public types. Runtime dependencies: `emittery` (event emitter) and `zod`
+(option validation).
 
 ---
 
 Key source files:
 
-| File                                | Role                                                      |
-| ----------------------------------- | --------------------------------------------------------- |
-| `src/index.ts`                      | `UCI` class — public API and engine lifecycle             |
-| `src/types.ts`                      | Exported types: `ID`, `InfoCommand`, `Option`, `Score`    |
-| `src/options.ts`                    | `Options` class — engine option store with Zod validation |
-| `src/process.ts`                    | `Process` class — child process wrapper with line emitter |
-| `src/parser/index.ts`               | Parser dispatcher — routes UCI output tokens to handlers  |
-| `src/parser/bestmove.ts`            | Parses `bestmove` responses                               |
-| `src/parser/info.ts`                | Parses `info` lines into typed `InfoCommand` objects      |
-| `src/parser/identity.ts`            | Parses `id` responses                                     |
-| `src/parser/extract.ts`             | Utility: extracts named fields from UCI token strings     |
-| `src/parser/noop.ts`                | Pass-through for commands with no payload                 |
-| `src/__tests__/index.spec.ts`       | Unit tests for the `UCI` class                            |
-| `src/__tests__/parser.spec.ts`      | Unit tests for the parser module                          |
-| `src/__tests__/integration.spec.ts` | Integration tests (skipped without a real engine binary)  |
+| File                                | Role                                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/index.ts`                      | `UCI` class — public API and engine lifecycle                                                   |
+| `src/types.ts`                      | Exported types: `ID`, `InfoCommand`, `Option`, `Score`                                          |
+| `src/engine-process.ts`             | `EngineProcess` abstract base class — extends `Emittery`; runtime contract for non-Node engines |
+| `src/node-process.ts`               | `NodeProcess` class — Node.js `EngineProcess` via `child_process.spawn`                         |
+| `src/options.ts`                    | `Options` class — engine option store with Zod validation                                       |
+| `src/process.ts`                    | `Process` class — wraps an `EngineProcess` with line buffering, re-emits `line`/`error`/`exit`  |
+| `src/parser/index.ts`               | Parser dispatcher — routes UCI output tokens to handlers                                        |
+| `src/parser/bestmove.ts`            | Parses `bestmove` responses                                                                     |
+| `src/parser/info.ts`                | Parses `info` lines into typed `InfoCommand` objects                                            |
+| `src/parser/identity.ts`            | Parses `id` responses                                                                           |
+| `src/parser/extract.ts`             | Utility: extracts named fields from UCI token strings                                           |
+| `src/parser/noop.ts`                | Pass-through for commands with no payload                                                       |
+| `src/__tests__/index.spec.ts`       | Unit tests for the `UCI` class                                                                  |
+| `src/__tests__/parser.spec.ts`      | Unit tests for the parser module                                                                |
+| `src/__tests__/integration.spec.ts` | Integration tests (skipped without a real engine binary)                                        |
 
 ---
 

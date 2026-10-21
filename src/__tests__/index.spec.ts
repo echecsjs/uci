@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import UCI from '../index.js';
+import { UCI } from '../index.js';
 
 describe('UCI', () => {
   it('emits an error when instantiated with an invalid path', async () => {

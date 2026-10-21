@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import UCI from '../index.js';
+import { UCI } from '../index.js';
 
 const ENGINE_PATH = process.env['UCI_ENGINE_PATH'];
 
