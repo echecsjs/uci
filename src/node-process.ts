@@ -19,10 +19,9 @@ class NodeProcess extends EngineProcess {
       void this.emit('error', error);
     });
     // Node passes null (not undefined) as the exit code when the process
-    // dies from a signal — a default parameter cannot express this mapping.
-    // eslint-disable-next-line unicorn/prefer-default-parameters
+    // dies from a signal — map it to 0.
     this.#child.on('exit', (code: number | null) => {
-      void this.emit('exit', code ?? 0);
+      void this.emit('exit', code === null ? 0 : code);
     });
     this.#child.stdout.on('data', (data) => {
       void this.emit('stdout', data.toString());
