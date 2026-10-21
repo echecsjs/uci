@@ -8,12 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Removed
-
-- `EngineProcess` interface — replaced by an abstract base class extending
-  `Emittery`. `onError`, `onExit`, and `onStdout` are gone; subscribe with
-  `on('error' | 'exit' | 'stdout', listener)` (listeners receive the Emittery
-  `{ data }` envelope). **Breaking** — the next release is 5.0.0.
+## [5.0.0] - 2026-10-21
 
 ### Added
 
@@ -22,6 +17,23 @@ and this project adheres to
 - The `process` option accepts a class as well as an instance; the class is
   constructed with the engine path
 - Named export `UCI` alongside the default export
+
+### Changed
+
+- `EngineProcess` is now an abstract base class extending `Emittery` instead of
+  a TypeScript interface — it exists at runtime, so vanilla JavaScript consumers
+  can `extends` it (#229). **Breaking.**
+
+### Removed
+
+- `onError`, `onExit`, and `onStdout` — subscribe with
+  `on('error' | 'exit' | 'stdout', listener)` instead; listeners receive the
+  Emittery `{ data }` envelope. Migration:
+
+  ```diff
+  -onStdout((data) => …)
+  +on('stdout', ({ data }) => …)
+  ```
 
 ## [4.2.0] - 2026-10-06
 
